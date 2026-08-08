@@ -39,7 +39,7 @@ jobs:
               if ($1 == "FINAL") {
                 if ($2 != "DIRECT") { print "FINAL must be DIRECT"; bad=1 }
                 final=1
-              } else if ($2 != "DIRECT" && $2 != "PROXY") {
+              } else if ($3 != "DIRECT" && $3 != "PROXY") {
                 print "Unexpected policy: " $0
                 bad=1
               }
