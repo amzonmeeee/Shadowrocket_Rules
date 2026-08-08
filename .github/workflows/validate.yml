@@ -1,0 +1,58 @@
+name: Validate configuration
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  basic-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check expected files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s HK_Rules.conf
+          test -s README.md
+          test -s LICENSE
+          test -s CHANGELOG.md
+          test -s assets/qr/HK_Rules.png
+          grep -q '^\[Rule\]$' HK_Rules.conf
+          grep -q '^FINAL,DIRECT$' HK_Rules.conf
+          grep -q '^DOMAIN-SUFFIX,chatgpt.com,PROXY$' HK_Rules.conf
+          grep -q '^DOMAIN-SUFFIX,claude.ai,PROXY$' HK_Rules.conf
+          ! grep -q '^RULE-SET,' HK_Rules.conf
+          ! grep -Eiq '(password|secret|token|private[_-]?key|訂閱連結)' HK_Rules.conf
+
+      - name: Validate rule policies
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk -F, '
+            /^[[:space:]]*#/ || /^[[:space:]]*$/ || /^\[/ { next }
+            /^[A-Z-]+,/ {
+              rules++
+              if ($1 == "FINAL") {
+                if ($2 != "DIRECT") { print "FINAL must be DIRECT"; bad=1 }
+                final=1
+              } else if ($2 != "DIRECT" && $2 != "PROXY") {
+                print "Unexpected policy: " $0
+                bad=1
+              }
+            }
+            END {
+              if (rules == 0) { print "No rules found"; bad=1 }
+              if (!final) { print "Missing FINAL,DIRECT"; bad=1 }
+              exit bad
+            }
+          ' HK_Rules.conf
+
+      - name: Validate QR image
+        shell: bash
+        run: |
+          set -euo pipefail
+          file assets/qr/HK_Rules.png | grep -Eiq 'PNG image data'

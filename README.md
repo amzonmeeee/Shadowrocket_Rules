@@ -2,6 +2,8 @@
 
 給香港網絡環境的自用 Shadowrocket 分流配置。
 
+[![Validate configuration](https://github.com/amzonmeeee/Shadowrocket_Rules/actions/workflows/validate.yml/badge.svg)](https://github.com/amzonmeeee/Shadowrocket_Rules/actions/workflows/validate.yml)
+
 這個 repository 只維護一個配置檔：`HK_Rules.conf`。它只把在香港沒有官方支援的 OpenAI / ChatGPT / Sora 與 Anthropic / Claude 服務交給 `PROXY`，其他流量一律 `DIRECT`。
 
 ## 直接使用
@@ -10,6 +12,16 @@
 2. 匯入 [`HK_Rules.conf`](HK_Rules.conf)。
 3. 如果你的代理策略名稱不是 `PROXY`，把配置內的 `PROXY` 改成實際策略名稱。
 4. 先測試 ChatGPT 與 Claude，再按需要調整節點出口。
+
+GitHub Raw 檔案地址：
+
+```text
+https://raw.githubusercontent.com/amzonmeeee/Shadowrocket_Rules/main/HK_Rules.conf
+```
+
+也可以直接掃描 [`assets/qr/HK_Rules.png`](assets/qr/HK_Rules.png) 匯入。
+
+![HK_Rules import QR Code](assets/qr/HK_Rules.png)
 
 ## 分流邏輯
 
