@@ -34,7 +34,7 @@ jobs:
           set -euo pipefail
           awk -F, '
             /^[[:space:]]*#/ || /^[[:space:]]*$/ || /^\[/ { next }
-            /^[A-Z-]+,/ {
+            /^[A-Z0-9-]+,/ {
               rules++
               if ($1 == "FINAL") {
                 if ($2 != "DIRECT") { print "FINAL must be DIRECT"; bad=1 }
