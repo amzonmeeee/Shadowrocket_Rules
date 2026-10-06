@@ -41,6 +41,15 @@ Shadowrocket 會按 `[Rule]` 由上至下匹配，命中第一條後停止；配
 - OpenAI、ChatGPT、Sora、ChatGPT Sites、語音服務、專用驗證與內容主機
 - Anthropic、Claude、Claude Desktop 預覽、MCP、專用登入與內容主機
 - Anthropic 官方公布的接入 IPv4／IPv6，供直接以 IP 連線時匹配
+- Anthropic ASN `399358`，作為新增目標 IP 的兜底；實際涵蓋範圍取決於客戶端 ASN 資料庫
+
+### Anthropic 補充規則（2026-10-06）
+
+新增 `claude.dev`、`claude.new`、`claude.site`、`claudepages.dev`、`antspace.dev` 五個域名後綴，並加入 `IP-ASN,399358,PROXY`。保留接入 IP `160.79.104.0/23` 與 `2607:6bc0::/48`，不新增 `/21` 或 `/32` 規則。ASN 比對可能觸發 DNS 解析；它不受前面兩條 IP 規則的 `no-resolve` 限制。
+
+**程序代理尚未啟用。** 本機 Shadowrocket 2.2.92（3445）的內建編輯器 `Contents/Resources/web/js/rule.js` 將 `PROCESS-NAME` 判為不支援的規則類型，主程式及隧道程式亦未找到此規則識別碼。因此配置將 `PROCESS-NAME,Claude,PROXY` 與 `PROCESS-NAME,claude,PROXY` 保留為註解，不視為有效的 Shadowrocket 程序代理。若日後確認客戶端支援，再啟用並從連線記錄驗證；僅匯入配置或通過本專案 CI 不能證明程序匹配有效。
+
+這兩條程序規則的預期用途，是讓匹配 `Claude`／`claude` 的外網連線（含 Google、GitHub、npm、CDN、外部網站及 MCP）走 `PROXY`，同時保留本機／區網直連的優先順序。程序名稱不同的 helper、`node` 或子程序不會因此自動涵蓋；不加入其他應用的廣泛程序規則。普通 Safari／瀏覽器、終端工具及其他應用仍按原域名規則分流。
 
 ### 規則來源與取捨（2026-09-28）
 
@@ -52,9 +61,9 @@ Shadowrocket 會按 `[Rule]` 由上至下匹配，命中第一條後停止；配
 | [v2fly OpenAI](https://github.com/v2fly/domain-list-community/blob/master/data/openai)、[blackmatrix7 OpenAI](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/OpenAI/OpenAI.list) | 補上 `chat.com`、`chatgpt.site`、`oaistatsig.com`、專用語音、驗證、CDN 及動態 WebSocket 主機。 |
 | [ACL4SSR Claude](https://github.com/ACL4SSR/ACL4SSR/blob/master/Clash/Ruleset/Claude.list)、[blackmatrix7 Claude](https://github.com/blackmatrix7/ios_rule_script/blob/master/rule/Shadowrocket/Claude/Claude.list)、[Sukka AI](https://ruleset.skk.moe/List/non_ip/ai.conf) | 核對常見基礎域名；Sukka 是多個 AI 服務的混合清單，不整份匯入。 |
 
-Google Storage、npm、GitHub Raw、Cloudflare 驗證、Auth0、Stripe、Sentry、Datadog、通用 LiveKit 主機等會由其他服務共用；這份按目的地分流的配置不會代理整個供應商網域。Claude Code 的安裝、第三方連接器或某些網頁功能因此仍可能產生直連請求。
+Google Storage、Google Fonts、npm、GitHub、GitHub Raw、cdnjs、jsDelivr、unpkg、Cloudflare 驗證、Auth0、Stripe、Sentry、Datadog、Intercom、Statsig、通用 LiveKit 主機等會由其他服務共用；這份按目的地分流的配置不會代理整個供應商網域。未命中前述代理規則的請求仍由 `FINAL,DIRECT` 直連；程序規則目前停用，因此 Claude Code 的安裝、第三方連接器或某些網頁功能仍可能產生直連請求。
 
-這份配置以域名規則為主，另加 Anthropic 官方接入 IP。它不能保證涵蓋第三方整合服務、其他硬編碼 IP，或沒有經過 Shadowrocket 的應用程式及系統連線。匯入後可在 Shadowrocket 的連線記錄核對 Claude 網頁、桌面版、Claude Code 及 ChatGPT 的實際命中策略和出口；若 `PROXY` 會自動切換節點，也要核對實際出口。掃描二維碼或使用 Raw 連結的配置亦須重新更新。
+這份配置以域名規則為主，另加 Anthropic 官方接入 IP 與 ASN 兜底。它不能保證涵蓋第三方整合服務、其他硬編碼 IP，或沒有經過 Shadowrocket 的應用程式及系統連線。匯入後可在 Shadowrocket 的連線記錄核對 Claude 網頁、桌面版、Claude Code 及 ChatGPT 的實際命中策略和出口，並確認 Google、GitHub、npm 及共用 CDN 的一般流量仍直連；若 `PROXY` 會自動切換節點，也要核對實際出口。掃描二維碼或使用 Raw 連結的配置亦須重新更新。
 
 ## 設計原則
 
