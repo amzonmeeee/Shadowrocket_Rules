@@ -4,7 +4,7 @@
 
 [![Validate configuration](https://github.com/amzonmeeee/Shadowrocket_Rules/actions/workflows/validate.yml/badge.svg)](https://github.com/amzonmeeee/Shadowrocket_Rules/actions/workflows/validate.yml)
 
-這個 repository 只維護一個配置檔：`HK_Rules.conf`。它只把在香港沒有官方支援的 OpenAI / ChatGPT / Sora 與 Anthropic / Claude 服務交給 `PROXY`，其他流量一律 `DIRECT`。
+這個 repository 只維護一個配置檔：`HK_Rules.conf`。它把在香港沒有官方支援的 OpenAI / ChatGPT / Sora 與 Anthropic / Claude 服務，以及下列指定主機交給 `PROXY`，其他流量一律 `DIRECT`。
 
 ## 直接使用
 
@@ -30,6 +30,7 @@ https://raw.githubusercontent.com/amzonmeeee/Shadowrocket_Rules/main/HK_Rules.co
 | 本機、私有網絡與 `.local` | `DIRECT` |
 | OpenAI / ChatGPT / Sora | `PROXY` |
 | Anthropic / Claude | `PROXY` |
+| 指定的 Ghost 內容主機與兩個 Datadog 接收主機 | `PROXY`（所有應用） |
 | 其他所有流量 | `DIRECT` |
 
 Shadowrocket 會按 `[Rule]` 由上至下匹配，命中第一條後停止；配置最後的 `FINAL,DIRECT` 是全域直連兜底。
@@ -40,8 +41,19 @@ Shadowrocket 會按 `[Rule]` 由上至下匹配，命中第一條後停止；配
 
 - OpenAI、ChatGPT、Sora、ChatGPT Sites、語音服務、專用驗證與內容主機
 - Anthropic、Claude、Claude Desktop 預覽、MCP、專用登入與內容主機
+- 精確的 Ghost 內容主機與 Claude Code 使用的兩個共用 Datadog 接收主機
 - Anthropic 官方公布的接入 IPv4／IPv6，供直接以 IP 連線時匹配
 - Anthropic ASN `399358`，作為新增目標 IP 的兜底；實際涵蓋範圍取決於客戶端 ASN 資料庫
+
+### Ghost 與 Datadog 精確主機（2026-10-09）
+
+新增以下三條 `DOMAIN` 規則，全部使用 `PROXY`：
+
+- `anthropic-com.ghost.io`：按[對照帖文](https://x.com/wlzh/status/2108017417670860900)補入的內容主機；尚未確認是否為目前 Claude 功能的必要依賴。
+- `http-intake.logs.us5.datadoghq.com`：Claude Code 的運作遙測。
+- `browser-intake-us5-datadoghq.com`：Claude Code 的運作錯誤回報。
+
+Datadog 主機用途以 [Claude Code 官方網絡要求](https://code.claude.com/docs/en/network-config#network-access-requirements)為依據。這些規則按目的地主機匹配，其他應用連到相同主機的請求也會走代理；不會因此代理整個 `ghost.io`、`datadoghq.com` 或包含 `datadog`／`sift` 字串的所有域名。
 
 ### Anthropic 補充規則（2026-10-06）
 

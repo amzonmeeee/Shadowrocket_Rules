@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4 — 2026-10-09
+
+- 新增 `anthropic-com.ghost.io`、`http-intake.logs.us5.datadoghq.com` 與 `browser-intake-us5-datadoghq.com` 的精確 `DOMAIN` 代理規則。
+- 說明其他應用連到相同主機亦會代理；不擴大至供應商整個域名或關鍵字匹配。
+
 ## 0.1.3 — 2026-10-06
 
 - 補上 `claude.dev`、`claude.new`、`claude.site`、`claudepages.dev`、`antspace.dev`，並加入 Anthropic ASN `399358` 兜底。
