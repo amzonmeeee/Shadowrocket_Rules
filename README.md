@@ -4,14 +4,14 @@
 
 [![Validate configuration](https://github.com/amzonmeeee/Shadowrocket_Rules/actions/workflows/validate.yml/badge.svg)](https://github.com/amzonmeeee/Shadowrocket_Rules/actions/workflows/validate.yml)
 
-這個 repository 只維護一個配置檔：`HK_Rules.conf`。它把在香港沒有官方支援的 OpenAI / ChatGPT / Sora 與 Anthropic / Claude 服務，以及下列指定主機交給 `PROXY`，其他流量一律 `DIRECT`。
+這個 repository 只維護一個配置檔：`HK_Rules.conf`。它把在香港沒有官方支援的 OpenAI / ChatGPT / Sora 與 Anthropic / Claude 服務、Meta Muse（包括共用 Meta 基礎設施），以及下列指定主機交給 `PROXY`，其他流量一律 `DIRECT`。
 
 ## 直接使用
 
 1. 在 Shadowrocket 中加入你的節點或訂閱。
 2. 匯入 [`HK_Rules.conf`](HK_Rules.conf)。
 3. 如果你的代理策略名稱不是 `PROXY`，把配置內的 `PROXY` 改成實際策略名稱。
-4. 先測試 ChatGPT 與 Claude，再按需要調整節點出口。
+4. 先測試 ChatGPT、Claude 與 Muse，再按需要調整節點出口。
 
 GitHub Raw 檔案地址：
 
@@ -30,6 +30,7 @@ https://raw.githubusercontent.com/amzonmeeee/Shadowrocket_Rules/main/HK_Rules.co
 | 本機、私有網絡與 `.local` | `DIRECT` |
 | OpenAI / ChatGPT / Sora | `PROXY` |
 | Anthropic / Claude | `PROXY` |
+| Meta Muse、指定 Meta / Facebook 共用網域、WhatsApp 入口及 AS32934 | `PROXY`（包括其他應用命中的流量） |
 | 指定的 Ghost 內容主機與兩個 Datadog 接收主機 | `PROXY`（所有應用） |
 | 其他所有流量 | `DIRECT` |
 
@@ -44,6 +45,31 @@ Shadowrocket 會按 `[Rule]` 由上至下匹配，命中第一條後停止；配
 - 精確的 Ghost 內容主機與 Claude Code 使用的兩個共用 Datadog 接收主機
 - Anthropic 官方公布的接入 IPv4／IPv6，供直接以 IP 連線時匹配
 - Anthropic ASN `399358`，作為新增目標 IP 的兜底；實際涵蓋範圍取決於客戶端 ASN 資料庫
+
+### Meta Muse 廣覆蓋規則（2026-11-09）
+
+本次按「務求全包」採用較廣範圍的目的地規則，全部走既有 `PROXY`：
+
+| 範圍 | 規則與涵蓋例子 |
+| --- | --- |
+| Muse 網站與連接器平台 | `muse.ai` 後綴，包含 `platform.muse.ai`、分享及支援頁面 |
+| API 與 Meta 登入 | `meta.ai`、`meta.com` 後綴，包含 `hatch-api.meta.ai`、`api.meta.ai`、`auth.meta.com` |
+| 雲端 VM 與檔案 | `metaaivm.com` 後綴，包含 `hatch.metaaivm.com` 與動態 VM 子域名 |
+| 共用 Graph API、語音、邊緣與 CDN | `facebook.com`、`facebook.net`、`fb.com`、`fb.me`、`fbcdn.net`、`fbcdn.com`、`fbsbx.com`、`fbsbx.net`、`tfbnw.net`，以及精確主機 `fbcdn-a.akamaihd.net` |
+| WhatsApp 使用入口 | `whatsapp.com`、`whatsapp.net`、`wa.me` |
+| Meta 目標 IP 兜底 | `IP-ASN,32934,PROXY`，依賴客戶端 ASN 資料庫，可能觸發 DNS |
+
+**這會讓一般 Facebook、WhatsApp，以及命中 Meta AS32934 的 Instagram 等流量一併代理。** Shadowrocket 只按目的地匹配，無法從共用 Meta 主機判斷流量是否來自 Muse；這是本次優先擴大涵蓋的取捨。LAN 直連仍優先，未命中的其他流量仍由 `FINAL,DIRECT` 處理。沒有加入會誤中其他網站的 `DOMAIN-KEYWORD,muse`，亦沒有啟用尚未確認支援的程序規則。
+
+來源分層：
+
+- [Muse 官方網站](https://muse.ai/)及[官方介紹](https://ai.meta.com/muse/)確認網站、雲端 VM 與 WhatsApp 使用入口；[連接器平台](https://platform.muse.ai/)確認平台子域名。
+- [macOS Muse 拆解](https://github.com/barkleesanders/muse-endo-teardown)的第三方觀察列出 `hatch.metaaivm.com`、`hatch-api.meta.ai`、`api.meta.ai`、`shortwave.facebook.com` 及 `edge-metaclaw-http.c10r.facebook.com`；不是官方完整網絡清單，也不是本次實機抓包。
+- 共用基礎設施參考 [v2fly Facebook](https://github.com/v2fly/domain-list-community/blob/master/data/facebook)及 [WhatsApp](https://github.com/v2fly/domain-list-community/blob/master/data/whatsapp)清單，僅選取主要服務／內容網域；`AS32934` 歸屬參考 [Meta PeeringDB](https://www.peeringdb.com/net?asn=32934)。
+
+**廣覆蓋不等於已驗證零漏網。** 未取得你的 Muse 連線記錄，無法保證所有版本、第三方登入／付款／連接器、其他 ASN 或硬編碼 IP 均已涵蓋。雲端 VM 自己對外發出的請求不經你本機 Shadowrocket；本配置控制的是裝置到 Muse／Meta 的連線。沒有因此把整個 Google、Apple、Cloudflare、Stripe 或 Akamai 設為代理。
+
+更新配置後，重新連線並檢查 Muse 登入、對話、串流、語音、附件、VM／接管畫面及 WhatsApp 入口的連線策略；同時核對實際出口 IP。地區或帳戶資格錯誤不能單靠增加域名保證解決。現有 `block-quic = all-proxy` 及 UDP 不支援時拒絕的設定保持不變；語音若使用 UDP，仍受節點能力限制。CI 僅驗證配置靜態結構，不能證明客戶端實際匹配或服務可用。
 
 ### Ghost 與 Datadog 精確主機（2026-10-09）
 
@@ -75,7 +101,7 @@ Datadog 主機用途以 [Claude Code 官方網絡要求](https://code.claude.com
 
 Google Storage、Google Fonts、npm、GitHub、GitHub Raw、cdnjs、jsDelivr、unpkg、Cloudflare 驗證、Auth0、Stripe、Sentry、Datadog、Intercom、Statsig、通用 LiveKit 主機等會由其他服務共用；這份按目的地分流的配置不會代理整個供應商網域。未命中前述代理規則的請求仍由 `FINAL,DIRECT` 直連；程序規則目前停用，因此 Claude Code 的安裝、第三方連接器或某些網頁功能仍可能產生直連請求。
 
-這份配置以域名規則為主，另加 Anthropic 官方接入 IP 與 ASN 兜底。它不能保證涵蓋第三方整合服務、其他硬編碼 IP，或沒有經過 Shadowrocket 的應用程式及系統連線。匯入後可在 Shadowrocket 的連線記錄核對 Claude 網頁、桌面版、Claude Code 及 ChatGPT 的實際命中策略和出口，並確認 Google、GitHub、npm 及共用 CDN 的一般流量仍直連；若 `PROXY` 會自動切換節點，也要核對實際出口。掃描二維碼或使用 Raw 連結的配置亦須重新更新。
+這份配置以域名規則為主，另加 Anthropic 官方接入 IP，以及 Anthropic／Meta ASN 兜底。它不能保證涵蓋第三方整合服務、其他硬編碼 IP，或沒有經過 Shadowrocket 的應用程式及系統連線。匯入後可在 Shadowrocket 的連線記錄核對 Claude 網頁、桌面版、Claude Code 及 ChatGPT 的實際命中策略和出口，並確認 Google、GitHub、npm 及共用 CDN 的一般流量仍直連；若 `PROXY` 會自動切換節點，也要核對實際出口。掃描二維碼或使用 Raw 連結的配置亦須重新更新。
 
 ## 設計原則
 

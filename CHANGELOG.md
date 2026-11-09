@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5 — 2026-11-09
+
+- 新增 Meta Muse 網站、API、Meta 登入、雲端 VM 動態子域名、共用 Facebook／CDN 及 WhatsApp 入口代理規則。
+- 加入 Meta ASN `32934` 廣覆蓋兜底；一般 Facebook、WhatsApp 及同 ASN 的 Instagram 等流量亦會代理。
+- 記錄官方與第三方來源、共用基礎設施的範圍，以及尚未取得實機連線記錄、第三方整合與 UDP 的驗證限制。
+
 ## 0.1.4 — 2026-10-09
 
 - 新增 `anthropic-com.ghost.io`、`http-intake.logs.us5.datadoghq.com` 與 `browser-intake-us5-datadoghq.com` 的精確 `DOMAIN` 代理規則。
