@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.6 — 2026-11-09
+
+- 收窄 Meta Muse 規則：移除 `facebook.com`、`facebook.net`、`fb.com`、`fb.me`、`fbcdn.*`、`fbsbx.*`、`tfbnw.net`、`fbcdn-a.akamaihd.net`、WhatsApp 網域及 `IP-ASN,32934`，避免 Facebook、Instagram、WhatsApp 一般流量被代理。
+- 改以精確 `DOMAIN` 代理 Muse 專用的 `shortwave.facebook.com` 與 `edge-metaclaw-http.c10r.facebook.com`。
+
 ## 0.1.5 — 2026-11-09
 
 - 新增 Meta Muse 網站、API、Meta 登入、雲端 VM 動態子域名、共用 Facebook／CDN 及 WhatsApp 入口代理規則。
